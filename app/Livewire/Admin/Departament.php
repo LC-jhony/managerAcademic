@@ -7,9 +7,11 @@ use App\Models\Departament as ModelDepartament;
 use Livewire\Attributes\Layout;
 use App\Livewire\Forms\DepartamentForm;
 use PhpParser\Node\Stmt\TryCatch;
+use WireUi\Traits\WireUiActions;
 
 class Departament extends Component
 {
+    use WireUiActions;
     public $showIngDepartamentDrawer = false;
     public $isEditMode = false;
     public DepartamentForm $form;
@@ -24,14 +26,11 @@ class Departament extends Component
     }
     public function save()
     {
-        try {
-            $this->form->store();
-            $this->reset();
-            $this->redirect(route('departament.form'));
-        } catch (\Exception $e) {
-            $this->emit('error', $e->getMessage());
-        }
+        $this->form->store();
+        $this->reset('showIngDepartamentDrawer');
+        $this->reset();
     }
+
     public function showEditDepartamentDrawer($id): void
     {
         $this->form->departament = ModelDepartament::findOrFail($id);
@@ -51,6 +50,7 @@ class Departament extends Component
         $departament = ModelDepartament::findOrFail($id);
         $departament->delete();
         $this->reset();
+        $this->redirect(route('departament.form'));
     }
     #[Layout('layouts.app')]
     public function render()

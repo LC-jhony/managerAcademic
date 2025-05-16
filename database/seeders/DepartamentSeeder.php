@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Departament;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DepartamentSeeder extends Seeder
 {
@@ -12,6 +13,15 @@ class DepartamentSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $careers = [
+            'Computación e Informatica',
+            'Enfermería Tecnica',
+            'Produccion Agropecuaria',
+        ];
+        foreach ($careers as $career) {
+            Departament::create([
+                'name' => $career,
+            ]);
+        }
     }
 }
