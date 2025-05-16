@@ -1,0 +1,201 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" // Cambia según tu base de datos: postgres, sqlite, etc.
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student?
+  teacher Teacher?
+  staff   Staff?
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+  STAFF
+}
+
+model Career {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses  Course[]
+  students Student[] // Añadida relación inversa con Student
+}
+
+model Student {
+  id          Int       @id @default(autoincrement())
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int       @unique
+  career      Career    @relation(fields: [careerId], references: [id])
+  careerId    Int
+  dni         String    @unique
+  dateOfBirth DateTime?
+  address     String?
+  phone       String?
+  status      Status    @default(ACTIVE)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  enrollments Enrollment[]
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+}
+
+model Teacher {
+  id                  Int      @id @default(autoincrement())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              Int      @unique
+  professionalProfile String?
+  degree              String?
+  experienceYears     Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  sections Section[]
+}
+
+model Semester {
+  id        Int            @id @default(autoincrement())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    SemesterStatus @default(UPCOMING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  sections Section[]
+}
+
+enum SemesterStatus {
+  CURRENT
+  CLOSED
+  UPCOMING
+}
+
+model Course {
+  id                  Int      @id @default(autoincrement())
+  code                String   @unique
+  name                String
+  credits             Int
+  hoursWeekly         Int
+  semesterRecommended Int
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  career   Career    @relation(fields: [careerId], references: [id])
+  careerId Int
+  sections Section[]
+}
+
+model Section {
+  id          Int      @id @default(autoincrement())
+  course      Course   @relation(fields: [courseId], references: [id])
+  courseId    Int
+  semester    Semester @relation(fields: [semesterId], references: [id])
+  semesterId  Int
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId   Int
+  name        String
+  maxStudents Int      @default(30)
+  classroom   String?
+
+  schedule    Schedule?
+  enrollments Enrollment[]
+}
+
+model Schedule {
+  id        Int       @id @default(autoincrement())
+  section   Section   @relation(fields: [sectionId], references: [id])
+  sectionId Int       @unique
+  dayOfWeek DayOfWeek
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Enrollment {
+  id             Int              @id @default(autoincrement())
+  student        Student          @relation(fields: [studentId], references: [id])
+  studentId      Int
+  section        Section          @relation(fields: [sectionId], references: [id])
+  sectionId      Int
+  enrollmentDate DateTime         @default(now())
+  status         EnrollmentStatus @default(ENROLLED)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  grade       Grade?
+  attendances Attendance[] // Añadida relación inversa con Attendance
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  APPROVED
+  FAILED
+  WITHDRAWN
+}
+
+model Grade {
+  id           Int        @id @default(autoincrement())
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
+  enrollmentId Int        @unique
+  partial1     Float?
+  partial2     Float?
+  finalGrade   Float?
+  observations String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Attendance {
+  id           Int        @id @default(autoincrement())
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
+  enrollmentId Int
+  date         DateTime
+  present      Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Staff {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int      @unique
+  department String?
+  position   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
